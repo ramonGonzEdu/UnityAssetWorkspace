@@ -20,8 +20,6 @@ namespace DaMastaCoda.GenericAI
 			// input.SetKey(KeyCode.LeftShift, true);
 		}
 
-		float ganderCooldown = 0f;
-		bool gander = true;
 
 		public bool skipQueues = true;
 		public LayerMask skipQueuesLayerMask;
@@ -56,11 +54,13 @@ namespace DaMastaCoda.GenericAI
 
 						if (leftDot < rightDot)
 						{
-							input.SetAxis("Mouse X", (1 - angleSimNorm) * 0.5f);
+							input.SetAxis("Mouse X", 0.5f);
+							// input.SetAxis("Mouse X", (1 - angleSimNorm) * 0.5f);
 						}
 						else if (leftDot > rightDot)
 						{
-							input.SetAxis("Mouse X", (1 - angleSimNorm) * -0.5f);
+							input.SetAxis("Mouse X", -0.5f);
+							// input.SetAxis("Mouse X", (1 - angleSimNorm) * -0.5f);
 						}
 					}
 
@@ -73,17 +73,20 @@ namespace DaMastaCoda.GenericAI
 
 						if (upDot < downDot)
 						{
-							input.SetAxis("Mouse Y", (1 - angleSimNorm) * -0.1f);
+							// input.SetAxis("Mouse Y", (1 - angleSimNorm) * -0.1f); 
+							input.SetAxis("Mouse Y", -0.1f);
 						}
 						else if (upDot > downDot)
 						{
-							input.SetAxis("Mouse Y", (1 - angleSimNorm) * 0.1f);
+							// input.SetAxis("Mouse Y", (1 - angleSimNorm) * 0.1f); 
+							input.SetAxis("Mouse Y", 0.1f);
 						}
 					}
 				}
 				else
 				{
 					input.SetAxis("Mouse X", 0f);
+					input.SetAxis("Mouse Y", 0f);
 				}
 
 
@@ -101,39 +104,75 @@ namespace DaMastaCoda.GenericAI
 					current = waypointList.Dequeue();
 				}
 
+				Gander();
+				Wander();
+			}
+		}
 
-				input.SetAxis("Vertical", 0f);
-				if (ganderCooldown <= 0.0f)
+
+		float wanderCooldown = 0f;
+		bool wander = true;
+		private void Wander()
+		{
+
+			if (wanderCooldown <= 0.0f)
+			{
+				if (wander)
 				{
-					if (gander)
-					{
-						input.SetAxis("Mouse X", Random.Range(-0.3f, 0.3f));
+					input.SetAxis("Vertical", (float)Random.Range(0, 1));
 
-						float xorient = (orientation.localRotation.eulerAngles.x);
-						if (xorient > 180) xorient -= 360;
-
-						if (xorient > 10)
-							input.SetAxis("Mouse Y", Random.Range(-0.01f, 0.1f));
-						else if (xorient < -10)
-							input.SetAxis("Mouse Y", Random.Range(0.01f, -0.1f));
-						else
-							input.SetAxis("Mouse Y", Random.Range(-0.1f, 0.1f));
-					}
-					else
-					{
-						input.SetAxis("Mouse X", 0f);
-						input.SetAxis("Mouse Y", 0f);
-					}
-
-					ganderCooldown = gander ?
-						Random.Range(0.0f, 1.0f) :
-						Random.Range(1.0f, 1.5f);
-
-					gander = !gander;
+				}
+				else
+				{
+					input.SetAxis("Vertical", 0f);
+					input.SetAxis("Horizontal", 0f);
 				}
 
-				ganderCooldown -= Time.deltaTime;
+				wanderCooldown = wander ?
+					Random.Range(0.0f, 1.0f) :
+					Random.Range(1.0f, 1.5f);
+
+				wander = !wander;
 			}
+
+			wanderCooldown -= Time.deltaTime;
+		}
+
+
+		float ganderCooldown = 0f;
+		bool gander = true;
+		private void Gander()
+		{
+			if (ganderCooldown <= 0.0f)
+			{
+				if (gander)
+				{
+					input.SetAxis("Mouse X", Random.Range(-0.3f, 0.3f));
+
+					float xorient = (orientation.localRotation.eulerAngles.x);
+					if (xorient > 180) xorient -= 360;
+
+					if (xorient > 10)
+						input.SetAxis("Mouse Y", Random.Range(-0.01f, 0.1f));
+					else if (xorient < -10)
+						input.SetAxis("Mouse Y", Random.Range(0.01f, -0.1f));
+					else
+						input.SetAxis("Mouse Y", Random.Range(-0.1f, 0.1f));
+				}
+				else
+				{
+					input.SetAxis("Mouse X", 0f);
+					input.SetAxis("Mouse Y", 0f);
+				}
+
+				ganderCooldown = gander ?
+					Random.Range(0.0f, 1.0f) :
+					Random.Range(1.0f, 1.5f);
+
+				gander = !gander;
+			}
+
+			ganderCooldown -= Time.deltaTime;
 		}
 
 		private bool NextQueueViable()
