@@ -30,8 +30,6 @@ namespace DaMastaCoda.Minecraft.v2
 		[Header("Ground Detection")]
 		[SerializeField] private LayerMask groundMask;
 		bool isGrounded;
-		float groundDistance = 0.1f;
-
 		float horizontalMovement;
 		float verticalMovement;
 		Vector3 moveDirection;

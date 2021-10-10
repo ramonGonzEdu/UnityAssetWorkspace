@@ -9,8 +9,8 @@ namespace DaMastaCoda.VR.GestureDetector.Controller
 	public class ControllerGrab : MonoBehaviour
 	{
 		[SerializeField] private Transform rig;
-		[SerializeField] private Transform rightHand;
-		[SerializeField] private Transform leftHand;
+		[SerializeField] private Transform handObject;
+		[SerializeField] private OVRInput.Controller handInput;
 		[SerializeField] private LayerMask layerMask;
 
 		void Start()
@@ -21,59 +21,30 @@ namespace DaMastaCoda.VR.GestureDetector.Controller
 		{
 			OVRInput.Update();
 
-			if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger))
+			if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, handInput))
 			{
-				if (leftGrab == null)
+				if (grabbed == null)
 					TryGrabLeft();
 			}
 			else
 			{
-				if (leftGrab != null)
+				if (grabbed != null)
 				{
-					Destroy(leftGrab.gameObject.GetComponent<FixedJoint>());
-					leftGrab = null;
+					Destroy(grabbed.gameObject.GetComponent<FixedJoint>());
+					grabbed = null;
 				}
 			}
-			if (OVRInput.Get(OVRInput.Button.SecondaryIndexTrigger))
-			{
-				if (rightGrab == null)
-					TryGrabRight();
-			}
-			else
-			{
-				if (rightGrab != null)
-				{
-					Destroy(rightGrab.gameObject.GetComponent<FixedJoint>());
-					rightGrab = null;
-				}
-			}
-
-
-
-
 		}
 
-		Collider leftGrab;
+		Collider grabbed;
 		private void TryGrabLeft()
 		{
-			Collider[] colliders = Physics.OverlapSphere(leftHand.position, 0.04f * rig.localScale.x, layerMask);
+			Collider[] colliders = Physics.OverlapSphere(handObject.position, 0.04f * rig.localScale.x, layerMask);
 			if (colliders.Length > 0)
 			{
-				leftGrab = colliders[0];
-				FixedJoint fj = leftGrab.gameObject.AddComponent<FixedJoint>();
-				fj.connectedBody = leftHand.GetComponent<Rigidbody>();
-			}
-		}
-
-		Collider rightGrab;
-		private void TryGrabRight()
-		{
-			Collider[] colliders = Physics.OverlapSphere(rightHand.position, 0.04f * rig.localScale.x, layerMask);
-			if (colliders.Length > 0)
-			{
-				rightGrab = colliders[0];
-				FixedJoint fj = rightGrab.gameObject.AddComponent<FixedJoint>();
-				fj.connectedBody = rightHand.GetComponent<Rigidbody>();
+				grabbed = colliders[0];
+				FixedJoint fj = grabbed.gameObject.AddComponent<FixedJoint>();
+				fj.connectedBody = handObject.GetComponent<Rigidbody>();
 			}
 		}
 
