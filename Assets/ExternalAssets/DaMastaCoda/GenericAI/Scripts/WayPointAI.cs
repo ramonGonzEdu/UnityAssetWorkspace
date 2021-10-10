@@ -38,7 +38,7 @@ namespace DaMastaCoda.GenericAI
 			if (left.sqrMagnitude > locationThreshold * locationThreshold)
 			{
 				if (Physics.Raycast(playerBody.position, left.normalized, left.magnitude, skipQueuesLayerMask))
-				{
+				{ 
 					input.SetKey(KeyCode.Space, true);
 				}
 
