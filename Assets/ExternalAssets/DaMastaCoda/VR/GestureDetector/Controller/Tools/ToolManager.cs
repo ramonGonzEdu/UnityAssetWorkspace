@@ -19,6 +19,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 			var toolInstance = Instantiate(tool, transform.position, transform.rotation);
 			toolInstance.GetComponent<Tool>().SetHand(handInput);
 			toolInstance.transform.SetParent(transform);
+			toolInstance.transform.localScale = Vector3.one;
 			tool = toolInstance;
 
 			foreach (var behavior in disableBehaviors)
@@ -44,6 +45,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 		float timeHeld = 0;
 		private void Update()
 		{
+			Destroy(gameObject);
 			OVRInput.Update();
 			if (OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, handInput) && tool != null)
 			{
