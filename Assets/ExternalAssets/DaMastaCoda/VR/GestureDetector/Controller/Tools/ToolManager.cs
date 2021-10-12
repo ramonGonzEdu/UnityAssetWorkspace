@@ -8,58 +8,78 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 	public class ToolManager : MonoBehaviour
 	{
 		[SerializeField] private OVRInput.Controller handInput;
-		[SerializeField] private MonoBehaviour[] disableBehaviors;
+		[SerializeField] private Transform rbHand;
+		[SerializeField] private GameObject[] disabledObjects;
+		[SerializeField] private Renderer graphics;
+		[SerializeField] private Material freeMaterial;
+		[SerializeField] private Material toolMaterial;
 		// Disable tool after holding PrimaryHandTrigger for 3s
 
-		GameObject tool;
-		public void EnableTool(GameObject tool)
+		bool hasTool { get => (bool)tool; }
+		GameObject tool = null;
+		public bool EnableTool(GameObject p_tool, bool useRigidBody = false)
 		{
-			if (tool != null) DisableTool();
+			if (tool) return false;
 
-			var toolInstance = Instantiate(tool, transform.position, transform.rotation);
+			graphics.material = toolMaterial;
+
+			var toolInstance = Instantiate(p_tool, useRigidBody ? rbHand : transform);
 			toolInstance.GetComponent<Tool>().SetHand(handInput);
-			toolInstance.transform.SetParent(transform);
-			toolInstance.transform.localScale = Vector3.one;
+			toolInstance.transform.localScale = p_tool.transform.localScale;
+			if (useRigidBody)
+				toolInstance.transform.localScale /= rbHand.transform.localScale.x;
+			// toolInstance.transform.localPosition = p_tool.transform.localPosition;
+			// toolInstance.transform.localRotation = p_tool.transform.localRotation;
+
+			startScale = toolInstance.transform.localScale;
 			tool = toolInstance;
 
-			foreach (var behavior in disableBehaviors)
+			foreach (var behavior in disabledObjects)
 			{
-				behavior.enabled = false;
+				behavior.SetActive(false);
 			}
 			tool.SetActive(true);
+			return true;
 		}
-		public void DisableTool()
+		public bool DisableTool()
 		{
 			if (tool != null)
 			{
+				graphics.material = freeMaterial;
+
 				tool.SetActive(false);
 				Destroy(tool);
 				tool = null;
+				foreach (var behavior in disabledObjects)
+				{
+					behavior.SetActive(true);
+				}
+				return true;
 			}
-			foreach (var behavior in disableBehaviors)
-			{
-				behavior.enabled = true;
-			}
+			return false;
 		}
 
 		float timeHeld = 0;
+		Vector3 startScale;
 		private void Update()
 		{
-			Destroy(gameObject);
 			OVRInput.Update();
-			if (OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, handInput) && tool != null)
+			if (OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, handInput) && (!OVRInput.Get(OVRInput.Button.PrimaryHandTrigger) || !OVRInput.Get(OVRInput.Button.SecondaryHandTrigger)))
 			{
-				Debug.DrawRay(transform.position, transform.forward * 10, Color.green);
+				if (timeHeld == 0) startScale = tool.transform.localScale;
+
 				timeHeld += Time.deltaTime;
-				if (timeHeld > 3)
+				tool.transform.localScale = (2f - timeHeld) * 0.5f * startScale;
+				if (timeHeld > 2f)
 				{
-					DisableTool();
+					if (!DisableTool())
+						Destroy(transform.parent.gameObject);
 					timeHeld = 0;
 				}
 			}
 			else
 			{
-				Debug.DrawRay(transform.position, transform.forward * 10, Color.red);
+				tool.transform.localScale = startScale;
 				timeHeld = 0;
 			}
 		}

@@ -24,26 +24,30 @@ namespace DaMastaCoda.VR.GestureDetector.Controller
 			if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, handInput))
 			{
 				if (grabbed == null)
-					TryGrabLeft();
+					TryGrab();
 			}
 			else
 			{
 				if (grabbed != null)
 				{
-					Destroy(grabbed.gameObject.GetComponent<FixedJoint>());
+					Destroy(grabbed.GetComponent<FixedJoint>());
 					grabbed = null;
 				}
 			}
 		}
 
-		Collider grabbed;
-		private void TryGrabLeft()
+		GameObject grabbed;
+		private void TryGrab()
 		{
 			Collider[] colliders = Physics.OverlapSphere(handObject.position, 0.04f * rig.localScale.x, layerMask);
 			if (colliders.Length > 0)
 			{
-				grabbed = colliders[0];
-				FixedJoint fj = grabbed.gameObject.AddComponent<FixedJoint>();
+				grabbed = colliders[0].gameObject;
+				if (grabbed.gameObject.GetComponent<Rigidbody>() == null)
+					grabbed = grabbed.GetComponentInParent<Rigidbody>().gameObject;
+
+
+				FixedJoint fj = grabbed.AddComponent<FixedJoint>();
 				fj.connectedBody = handObject.GetComponent<Rigidbody>();
 			}
 		}

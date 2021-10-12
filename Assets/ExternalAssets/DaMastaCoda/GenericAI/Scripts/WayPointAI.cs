@@ -33,12 +33,12 @@ namespace DaMastaCoda.GenericAI
 				current = waypointList.Dequeue();
 			}
 
-			Vector3 left = current - playerBody.position;
+			Vector3 left = current - orientation.position;
 
 			if (left.sqrMagnitude > locationThreshold * locationThreshold)
 			{
-				if (Physics.Raycast(playerBody.position, left.normalized, left.magnitude, skipQueuesLayerMask))
-				{ 
+				if (Physics.Raycast(playerBody.position + new Vector3(0, playerBody.localScale.y * 0.5f, 0), left.normalized, left.magnitude, skipQueuesLayerMask))
+				{
 					input.SetKey(KeyCode.Space, true);
 				}
 
@@ -49,8 +49,8 @@ namespace DaMastaCoda.GenericAI
 					{
 						var turnLeft = Quaternion.Euler(0, -1, 0) * orientation.forward;
 						var turnRight = Quaternion.Euler(0, 1, 0) * orientation.forward;
-						var leftDot = Vector3.Dot(left.normalized, turnLeft.normalized) * 0.5f + 0.5f;
-						var rightDot = Vector3.Dot(left.normalized, turnRight.normalized) * 0.5f + 0.5f;
+						var leftDot = Vector3.Dot(left.normalized, turnLeft) * 0.5f + 0.5f;
+						var rightDot = Vector3.Dot(left.normalized, turnRight) * 0.5f + 0.5f;
 
 						if (leftDot < rightDot)
 						{
@@ -66,20 +66,20 @@ namespace DaMastaCoda.GenericAI
 
 					{
 
-						var turnUp = orientation.forward + new Vector3(0, 0.1f, 0);
-						var turnDown = orientation.forward - new Vector3(0, 0.1f, 0);
-						var upDot = Vector3.Dot(left.normalized, turnUp.normalized) * 0.5f + 0.5f;
-						var downDot = Vector3.Dot(left.normalized, turnDown.normalized) * 0.5f + 0.5f;
+						var turnUp = Quaternion.AngleAxis(-1, orientation.right) * orientation.forward;
+						var turnDown = Quaternion.AngleAxis(1, orientation.right) * orientation.forward;
+						var upDot = Vector3.Dot(left.normalized, turnUp) * 0.5f + 0.5f;
+						var downDot = Vector3.Dot(left.normalized, turnDown) * 0.5f + 0.5f;
 
 						if (upDot < downDot)
 						{
 							// input.SetAxis("Mouse Y", (1 - angleSimNorm) * -0.1f); 
-							input.SetAxis("Mouse Y", -0.1f);
+							input.SetAxis("Mouse Y", -0.3f);
 						}
 						else if (upDot > downDot)
 						{
 							// input.SetAxis("Mouse Y", (1 - angleSimNorm) * 0.1f); 
-							input.SetAxis("Mouse Y", 0.1f);
+							input.SetAxis("Mouse Y", 0.3f);
 						}
 					}
 				}

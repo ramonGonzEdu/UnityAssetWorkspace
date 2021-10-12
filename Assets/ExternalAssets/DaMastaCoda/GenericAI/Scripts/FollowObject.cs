@@ -7,6 +7,7 @@ namespace DaMastaCoda.GenericAI
 	{
 		public Transform target;
 		WayPointAI ai;
+		public bool useQueue = true;
 
 		private void Start()
 		{
@@ -17,14 +18,18 @@ namespace DaMastaCoda.GenericAI
 
 		private void Update()
 		{
-			time += Time.deltaTime;
-
-			if (time > 1)
+			if (useQueue)
 			{
-				ai.waypointList.Enqueue(target.position);
+				time += Time.deltaTime;
 
-				time = 0;
+				if (time > 1)
+				{
+					ai.waypointList.Enqueue(target.position);
+
+					time = 0;
+				}
 			}
+			else ai.current = target.position;
 		}
 	}
 }

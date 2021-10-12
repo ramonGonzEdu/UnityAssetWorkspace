@@ -8,7 +8,8 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 	public class ApplyToolOnCollision : MonoBehaviour
 	{
 		[SerializeField] private GameObject toolPrefab;
-		[SerializeField] private bool destroyOnCollision;
+		[SerializeField] private bool rbTool = false;
+		[SerializeField] private bool destroyOnCollision = false;
 
 		private void OnCollisionEnter(Collision collision)
 		{
@@ -17,16 +18,15 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 
 		private void OnTriggerEnter(Collider collision)
 		{
-			print(collision.gameObject.tag);
 			if (collision.gameObject.tag == "Controller")
 			{
 				if (toolPrefab != null)
 				{
-					collision.gameObject.GetComponentInChildren<ToolManager>().EnableTool(toolPrefab);
+					var success = collision.transform.parent.GetComponentInChildren<ToolManager>().EnableTool(toolPrefab, rbTool);
+					if (destroyOnCollision && success)
+						Destroy(gameObject);
 				}
 
-				if (destroyOnCollision)
-					Destroy(gameObject);
 			}
 		}
 	}
