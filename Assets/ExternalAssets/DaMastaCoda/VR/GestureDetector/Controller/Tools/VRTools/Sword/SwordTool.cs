@@ -4,6 +4,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 	using System;
 	using System.Collections;
 	using System.Collections.Generic;
+	using System.Linq;
 
 	class CutData
 	{
@@ -88,6 +89,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 
 			//Create left and right slice of hollow object
+			// SlicesMetadata slicesMeta = new SlicesMetadata(plane, mesh, true, false, false, Tags.Tags.GetComponent(objectToCut).HasTag("Physics.Cuttable.Smooth"));
 			SlicesMetadata slicesMeta = new SlicesMetadata(plane, mesh, true, false, false, false);
 
 			GameObject positiveObject = CreateMeshGameObject(objectToCut);
@@ -162,6 +164,14 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 	{
 		Positive = 0,
 		Negative = 1
+	}
+
+	public static class EM
+	{
+		public static int[] FindAllIndexof<T>(this IEnumerable<T> values, T val)
+		{
+			return values.Select((b, i) => object.Equals(b, val) ? i : -1).Where(i => i != -1).ToArray();
+		}
 	}
 
 	/// <summary>
@@ -461,13 +471,13 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 				if (direction > 0)
 				{
-					AddTrianglesNormalAndUvs(MeshSide.Positive, halfway, -normal3, Vector2.zero, firstVertex, -normal3, Vector2.zero, secondVertex, -normal3, Vector2.zero, false, true);
-					AddTrianglesNormalAndUvs(MeshSide.Negative, halfway, normal3, Vector2.zero, secondVertex, normal3, Vector2.zero, firstVertex, normal3, Vector2.zero, false, true);
+					AddTrianglesNormalAndUvs(MeshSide.Positive, halfway, -normal3, Vector2.zero, firstVertex, -normal3, Vector2.zero, secondVertex, -normal3, Vector2.zero, false, false);
+					AddTrianglesNormalAndUvs(MeshSide.Negative, halfway, normal3, Vector2.zero, secondVertex, normal3, Vector2.zero, firstVertex, normal3, Vector2.zero, false, false);
 				}
 				else
 				{
-					AddTrianglesNormalAndUvs(MeshSide.Positive, halfway, normal3, Vector2.zero, secondVertex, normal3, Vector2.zero, firstVertex, normal3, Vector2.zero, false, true);
-					AddTrianglesNormalAndUvs(MeshSide.Negative, halfway, -normal3, Vector2.zero, firstVertex, -normal3, Vector2.zero, secondVertex, -normal3, Vector2.zero, false, true);
+					AddTrianglesNormalAndUvs(MeshSide.Positive, halfway, normal3, Vector2.zero, secondVertex, normal3, Vector2.zero, firstVertex, normal3, Vector2.zero, false, false);
+					AddTrianglesNormalAndUvs(MeshSide.Negative, halfway, -normal3, Vector2.zero, firstVertex, -normal3, Vector2.zero, secondVertex, -normal3, Vector2.zero, false, false);
 				}
 			}
 		}
@@ -729,6 +739,33 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 		private void DoSmoothing(ref List<Vector3> vertices, ref List<Vector3> normals, ref List<int> triangles)
 		{
+			Vector3[] normalsRead = normals.ToArray();
+
+			float _smoothingAngle = 70f;
+			float smoothingLimit = Mathf.Cos(Mathf.Deg2Rad * _smoothingAngle);
+
+			for (int i = 0; i < triangles.Count; i += 3)
+			{
+				// Find the vertices which have duplicates in the mesh
+				int index1 = triangles[i];
+				int index2 = triangles[i + 1];
+				int index3 = triangles[i + 2];
+
+				Vector3 vertex1 = vertices[index1];
+				Vector3 vertex2 = vertices[index2];
+				Vector3 vertex3 = vertices[index3];
+
+				int[] v1 = vertices.FindAllIndexof(vertex1).Where(v => Vector3.Dot(normalsRead[v], normalsRead[index1]) > 0.5f).ToArray();
+				int[] v2 = vertices.FindAllIndexof(vertex2).Where(v => Vector3.Dot(normalsRead[v], normalsRead[index2]) > 0.5f).ToArray();
+				int[] v3 = vertices.FindAllIndexof(vertex3).Where(v => Vector3.Dot(normalsRead[v], normalsRead[index3]) > 0.5f).ToArray();
+
+				// Set the vertecies for this triangle to the last element of the v arrays, otherwise keep the original vertex
+				triangles[i] = v1.Length > 0 ? v1[v1.Length - 1] : index1;
+				triangles[i + 1] = v2.Length > 0 ? v2[v2.Length - 1] : index2;
+				triangles[i + 2] = v3.Length > 0 ? v3[v3.Length - 1] : index3;
+
+			}
+
 			normals.ForEach(x =>
 			{
 				x = Vector3.zero;
@@ -751,6 +788,8 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 			{
 				x.Normalize();
 			});
+
+
 		}
 	}
 

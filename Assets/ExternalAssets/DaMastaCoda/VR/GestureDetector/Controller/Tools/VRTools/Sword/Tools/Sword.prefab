@@ -71,7 +71,7 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.03883817, y: 0.83436203, z: 0.038838197}
+  m_Size: {x: 0.015, y: 0.83436203, z: 0.038838197}
   m_Center: {x: 0, y: 0.5833333, z: 0}
 --- !u!114 &1458229394
 MonoBehaviour:
@@ -160,7 +160,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 294351bd822d2561aab40348bc73de6c, type: 3}
       propertyPath: m_Name
-      value: Sword Variant
+      value: Sword
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 294351bd822d2561aab40348bc73de6c, type: 3}
