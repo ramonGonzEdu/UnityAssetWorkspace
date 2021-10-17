@@ -47,7 +47,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 				Vector3 normal = Vector3.Cross(side1, side2).normalized;
 
-				Vector3 transformedNormal = other.gameObject.transform.TransformDirection(normal);
+				Vector3 transformedNormal = other.gameObject.transform.InverseTransformVector(normal);
 
 				Vector3 transformedStartingPoint = other.gameObject.transform.InverseTransformPoint(data._triggerEnterTipPosition);
 
@@ -121,6 +121,11 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 			meshGameObject.AddComponent<MeshFilter>();
 			meshGameObject.AddComponent<MeshRenderer>();
+
+			{
+				var tags = meshGameObject.AddComponent<Tags.Tags>();
+				tags.Clone(Tags.Tags.GetComponent(originalObject));
+			}
 
 			meshGameObject.GetComponent<MeshRenderer>().materials = originalMaterial;
 

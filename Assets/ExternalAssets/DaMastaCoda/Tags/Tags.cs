@@ -45,6 +45,14 @@ namespace DaMastaCoda.Tags
 		}
 	}
 
+	public static class TagsExtensions
+	{
+		public static Tags GetTags(this GameObject obj)
+		{
+			return Tags.GetComponent(obj);
+		}
+	}
+
 	public class Tags : MonoBehaviour
 	{
 		// True -> Tag is present and all child tags are present
@@ -52,15 +60,36 @@ namespace DaMastaCoda.Tags
 		// Null -> Tag is missing
 		Dictionary<Tag, int> tags = new Dictionary<Tag, int>();
 		static Dictionary<Tag, Dictionary<GameObject, int>> objectTags = null;
-		[SerializeField] private string[] inspectorTags;
+		[SerializeField] private string[] inspectorTags = new string[0];
 		public float amount;
 
+
+		bool existed = false;
 		private void Start()
 		{
 			if (objectTags == null)
 				objectTags = new Dictionary<Tag, Dictionary<GameObject, int>>();
 
+			if (!existed)
+			{
+				existed = true;
+				OnValidate();
+			}
+		}
+
+		public void Clone(Tags oldTags)
+		{
+			existed = true;
+			inspectorTags = oldTags.inspectorTags;
 			OnValidate();
+			// tags = new Dictionary<Tag, int>(oldTags.tags);
+
+			// if (objectTags != null)
+			// 	foreach (var tag in tags)
+			// 	{
+			// 		if (!objectTags.ContainsKey(tag.Key)) objectTags[tag.Key] = new Dictionary<GameObject, int>();
+			// 		objectTags[tag.Key][gameObject] = tag.Value;
+			// 	}
 		}
 
 		public static Tags GetComponent(GameObject obj)

@@ -10,12 +10,10 @@ namespace DaMastaCoda.RigidBody.Interact.CloningVat
 		[SerializeField] private Transform outputVat;
 
 
-		bool m_Started = false;
 
 		void Start()
 		{
 			//Use this to ensure that the Gizmos are being drawn when in Play Mode.
-			m_Started = true;
 		}
 
 		public void DoClone()
