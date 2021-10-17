@@ -124,6 +124,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 			meshGameObject.GetComponent<MeshRenderer>().materials = originalMaterial;
 
+			meshGameObject.transform.SetParent(originalObject.transform.parent);
 			meshGameObject.transform.localScale = originalObject.transform.localScale;
 			meshGameObject.transform.rotation = originalObject.transform.rotation;
 			meshGameObject.transform.position = originalObject.transform.position;
