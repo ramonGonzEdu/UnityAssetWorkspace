@@ -376,10 +376,11 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 			}
 			else
 			{
+				int vIndex = vertices.Count;
 				vertices.Add(vertex);
 				normals.Add(normal);
 				uvs.Add(uv);
-				triangles.Add(vertices.IndexOf(vertex));
+				triangles.Add(vIndex);
 			}
 		}
 
@@ -533,30 +534,30 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 			for (int i = 0; i < meshTriangles.Length; i += 3)
 			{
 				//We need the verts in order so that we know which way to wind our new mesh triangles.
-				Vector3 vert1 = meshVerts[meshTriangles[i]];
-				int vert1Index = Array.IndexOf(meshVerts, vert1);
+				int vert1Index = meshTriangles[i];
+				Vector3 vert1 = meshVerts[vert1Index];
 				Vector2 uv1 = meshUvs[vert1Index];
 				Vector3 normal1 = meshNormals[vert1Index];
 				bool vert1Side = _plane.GetSide(vert1);
 
-				Vector3 vert2 = meshVerts[meshTriangles[i + 1]];
-				int vert2Index = Array.IndexOf(meshVerts, vert2);
+				int vert2Index = meshTriangles[i + 1];
+				Vector3 vert2 = meshVerts[vert2Index];
 				Vector2 uv2 = meshUvs[vert2Index];
 				Vector3 normal2 = meshNormals[vert2Index];
 				bool vert2Side = _plane.GetSide(vert2);
 
-				Vector3 vert3 = meshVerts[meshTriangles[i + 2]];
-				bool vert3Side = _plane.GetSide(vert3);
-				int vert3Index = Array.IndexOf(meshVerts, vert3);
-				Vector3 normal3 = meshNormals[vert3Index];
+				int vert3Index = meshTriangles[i + 2];
+				Vector3 vert3 = meshVerts[vert3Index];
 				Vector2 uv3 = meshUvs[vert3Index];
+				Vector3 normal3 = meshNormals[vert3Index];
+				bool vert3Side = _plane.GetSide(vert3);
 
 				//All verts are on the same side
 				if (vert1Side == vert2Side && vert2Side == vert3Side)
 				{
 					//Add the relevant triangle
 					MeshSide side = (vert1Side) ? MeshSide.Positive : MeshSide.Negative;
-					AddTrianglesNormalAndUvs(side, vert1, normal1, uv1, vert2, normal2, uv2, vert3, normal3, uv3, true, false);
+					AddTrianglesNormalAndUvs(side, vert1, normal1, uv1, vert2, normal2, uv2, vert3, normal3, uv3, _useSharedVertices, false);
 				}
 				else
 				{
@@ -691,7 +692,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 			Vector3 side1 = vertex2 - vertex1;
 			Vector3 side2 = vertex3 - vertex1;
 
-			Vector3 normal = Vector3.Cross(side1, side2);
+			Vector3 normal = Vector3.Cross(side1, side2).normalized;
 
 			return normal;
 		}
