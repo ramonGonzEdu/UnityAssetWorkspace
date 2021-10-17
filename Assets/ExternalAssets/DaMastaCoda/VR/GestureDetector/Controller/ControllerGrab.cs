@@ -11,7 +11,6 @@ namespace DaMastaCoda.VR.GestureDetector.Controller
 		[SerializeField] private Transform rig;
 		[SerializeField] private Transform handObject;
 		[SerializeField] private OVRInput.Controller handInput;
-		[SerializeField] private LayerMask layerMask;
 
 		void Start()
 		{
@@ -30,25 +29,35 @@ namespace DaMastaCoda.VR.GestureDetector.Controller
 			{
 				if (grabbed != null)
 				{
-					Destroy(grabbed.GetComponent<FixedJoint>());
+					Destroy(fj);
+					Tags.Tags.GetComponent(grabbed).RemoveTag("VR.Grabbable.Grabbed");
 					grabbed = null;
+					fj = null;
 				}
 			}
 		}
 
 		GameObject grabbed;
+		FixedJoint fj;
 		private void TryGrab()
 		{
-			Collider[] colliders = Physics.OverlapSphere(handObject.position, 0.04f * rig.localScale.x, layerMask);
-			if (colliders.Length > 0)
+			if (grabbed != null) return;
+			Collider[] colliders = Physics.OverlapSphere(handObject.position, 0.04f * rig.localScale.x);
+			foreach (var collider in colliders)
 			{
-				grabbed = colliders[0].gameObject;
-				if (grabbed.gameObject.GetComponent<Rigidbody>() == null)
-					grabbed = grabbed.GetComponentInParent<Rigidbody>().gameObject;
+				if (Tags.Tags.GetComponent(collider.gameObject).HasTagAncestry("VR.Grabbable"))
+				{
+					grabbed = collider.gameObject;
+					if (grabbed.gameObject.GetComponent<Rigidbody>() == null)
+						grabbed = grabbed.GetComponentInParent<Rigidbody>().gameObject;
 
 
-				FixedJoint fj = grabbed.AddComponent<FixedJoint>();
-				fj.connectedBody = handObject.GetComponent<Rigidbody>();
+					fj = grabbed.AddComponent<FixedJoint>();
+					fj.connectedBody = handObject.GetComponent<Rigidbody>();
+
+					Tags.Tags.GetComponent(grabbed).AddTag("VR.Grabbable.Grabbed");
+					return;
+				}
 			}
 		}
 

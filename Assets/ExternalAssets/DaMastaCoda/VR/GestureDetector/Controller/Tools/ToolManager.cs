@@ -7,6 +7,9 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 
 	public class ToolManager : MonoBehaviour
 	{
+
+		[SerializeField] private Transform rig;
+		[SerializeField] private Transform handObject;
 		[SerializeField] private OVRInput.Controller handInput;
 		[SerializeField] private Transform rbHand;
 		[SerializeField] private GameObject[] disabledObjects;
@@ -21,10 +24,8 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 		{
 			if (tool) return false;
 
-			graphics.material = toolMaterial;
 
 			var toolInstance = Instantiate(p_tool, useRigidBody ? rbHand : transform);
-			toolInstance.GetComponent<Tool>().SetHand(handInput);
 			toolInstance.transform.localScale = p_tool.transform.localScale;
 			if (useRigidBody)
 				toolInstance.transform.localScale /= rbHand.transform.localScale.x;
@@ -34,11 +35,17 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 			startScale = toolInstance.transform.localScale;
 			tool = toolInstance;
 
+
 			foreach (var behavior in disabledObjects)
 			{
 				behavior.SetActive(false);
 			}
 			tool.SetActive(true);
+			toolInstance.GetComponent<Tool>().handInput = handInput;
+			toolInstance.GetComponent<Tool>().rig = rig;
+			toolInstance.GetComponent<Tool>().handObject = handObject;
+			graphics.material = toolInstance.GetComponent<Tool>().activeMaterial ?? toolMaterial;
+			toolInstance.GetComponent<Tool>().initialize.Invoke();
 			return true;
 		}
 		public bool DisableTool()
@@ -63,24 +70,27 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools
 		Vector3 startScale;
 		private void Update()
 		{
-			OVRInput.Update();
-			if (OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, handInput) && (!OVRInput.Get(OVRInput.Button.PrimaryHandTrigger) || !OVRInput.Get(OVRInput.Button.SecondaryHandTrigger)))
+			if (tool)
 			{
-				if (timeHeld == 0) startScale = tool.transform.localScale;
-
-				timeHeld += Time.deltaTime;
-				tool.transform.localScale = (2f - timeHeld) * 0.5f * startScale;
-				if (timeHeld > 2f)
+				OVRInput.Update();
+				if (OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, handInput) && (!OVRInput.Get(OVRInput.Button.PrimaryHandTrigger) || !OVRInput.Get(OVRInput.Button.SecondaryHandTrigger)))
 				{
-					if (!DisableTool())
-						Destroy(transform.parent.gameObject);
+					if (timeHeld == 0) startScale = tool.transform.localScale;
+
+					timeHeld += Time.deltaTime;
+					tool.transform.localScale = (2f - timeHeld) * 0.5f * startScale;
+					if (timeHeld > 2f)
+					{
+						if (!DisableTool())
+							Destroy(transform.parent.gameObject);
+						timeHeld = 0;
+					}
+				}
+				else
+				{
+					tool.transform.localScale = startScale;
 					timeHeld = 0;
 				}
-			}
-			else
-			{
-				tool.transform.localScale = startScale;
-				timeHeld = 0;
 			}
 		}
 	}

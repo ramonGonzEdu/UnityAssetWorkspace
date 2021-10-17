@@ -59,7 +59,18 @@ namespace DaMastaCoda.Minecraft.v2
 		private void Update()
 		{
 			// isGrounded = Physics.CheckSphere(transform.position, groundDistance, groundMask);
-			isGrounded = Physics.CheckBox(transform.position + new Vector3(0, 0.5f, 0), new Vector3(0.25f, 0.6f, 0.125f), playerBody.rotation, groundMask);
+			{
+				var possibleGround = Physics.OverlapBox(transform.position + new Vector3(0, 0.5f, 0), new Vector3(0.25f, 0.6f, 0.125f), playerBody.rotation);
+				foreach (var item in possibleGround)
+				{
+					if (item.GetComponent<Tags.Tags>()?.HasTag("Physics.Walkable") ?? false)
+					{
+						isGrounded = true;
+						break;
+					}
+					isGrounded = false;
+				}
+			}
 
 			ProcessInput();
 			ControlDrag();

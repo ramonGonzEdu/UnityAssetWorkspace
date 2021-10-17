@@ -37,6 +37,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
+  useQueue: 1
+--- !u!114 &2083203622228797468
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 817447209560013701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1240de478ac22de29f6f0fda7be5721, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inspectorTags:
+  - Special.Clonable
+  - VR.Grabbable
+  amount: 4
 --- !u!1001 &3655611918074588345
 PrefabInstance:
   m_ObjectHideFlags: 0

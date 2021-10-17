@@ -185,8 +185,8 @@ namespace DaMastaCoda.GenericAI
 			{
 				var left = (point - playerBody.position);
 
-				Debug.DrawLine(orientation.position, orientation.position + left, Color.green);
-				Debug.DrawLine(playerBody.position, playerBody.position + left, Color.green);
+				// Debug.DrawLine(orientation.position, orientation.position + left, Color.green);
+				// Debug.DrawLine(playerBody.position, playerBody.position + left, Color.green);
 
 				bool check = !(Physics.Raycast(orientation.position, left.normalized, left.magnitude, skipQueuesLayerMask)
 				|| Physics.Raycast(playerBody.position, left.normalized, left.magnitude, skipQueuesLayerMask));

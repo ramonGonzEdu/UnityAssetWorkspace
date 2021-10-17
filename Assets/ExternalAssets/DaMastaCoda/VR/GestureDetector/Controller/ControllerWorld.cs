@@ -47,9 +47,13 @@ namespace DaMastaCoda.VR.GestureDetector.Controller
 		float rigSizeOffset;
 		private void CalculateCameraScale()
 		{
+			var beforeCenter = (rightHand.position + leftHand.position) * 0.5f;
 			var currentSizeOffset = (rightHand.position - leftHand.position).magnitude;
 			var scale = sizeOffset / currentSizeOffset * rigSizeOffset;
 			rig.localScale = new Vector3(scale, scale, scale);
+			var afterCenter = (rightHand.position + leftHand.position) * 0.5f;
+
+			rig.position += beforeCenter - afterCenter;
 			rigSizeOffset = scale;
 		}
 
