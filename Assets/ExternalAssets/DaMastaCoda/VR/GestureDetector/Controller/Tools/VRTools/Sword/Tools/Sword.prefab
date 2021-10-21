@@ -95,6 +95,9 @@ MonoBehaviour:
   tipPos: {fileID: 252249878}
   basePos: {fileID: 629123436}
   forceAppliedToCut: 0
+  bladeNormal: {fileID: 4781462091692243642, guid: 294351bd822d2561aab40348bc73de6c, type: 3}
+  bladeZaWarudo: {fileID: 2100000, guid: fda59b3c9f8dc6f549c74a397b2cdfcf, type: 2}
+  materialPos: 2
 --- !u!1001 &2769187214397305828
 PrefabInstance:
   m_ObjectHideFlags: 0

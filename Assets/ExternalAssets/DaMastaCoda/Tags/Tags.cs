@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using System.Linq;
+using System;
+using UnityEngine.Events;
 
 namespace DaMastaCoda.Tags
 {
@@ -59,21 +61,28 @@ namespace DaMastaCoda.Tags
 		// False -> Tag is present but one or more child tags are missing
 		// Null -> Tag is missing
 		Dictionary<Tag, int> tags = new Dictionary<Tag, int>();
-		static Dictionary<Tag, Dictionary<GameObject, int>> objectTags = null;
+
+
+		[SerializeField] SerializableDictionary<string, string> tagsData = new SerializableDictionary<string, string>();
+		static Dictionary<Tag, Dictionary<GameObject, int>> objectTags = new Dictionary<Tag, Dictionary<GameObject, int>>();
 		[SerializeField] private string[] inspectorTags = new string[0];
 		public float amount;
 
 
-		bool existed = false;
+		static public bool g_existed = false;
+		public bool existed = false;
 		private void Start()
 		{
-			if (objectTags == null)
+			if (!g_existed)
+			{
+				g_existed = true;
 				objectTags = new Dictionary<Tag, Dictionary<GameObject, int>>();
-
+			}
 			if (!existed)
 			{
 				existed = true;
 				OnValidate();
+				afterValidation.Invoke();
 			}
 		}
 
@@ -81,6 +90,7 @@ namespace DaMastaCoda.Tags
 		{
 			existed = true;
 			inspectorTags = oldTags.inspectorTags;
+			tagsData = new SerializableDictionary<string, string>(oldTags.tagsData);
 			OnValidate();
 			// tags = new Dictionary<Tag, int>(oldTags.tags);
 
@@ -97,6 +107,8 @@ namespace DaMastaCoda.Tags
 			if (obj.GetComponent<Tags>() == null) obj.AddComponent<Tags>();
 			return obj.GetComponent<Tags>();
 		}
+
+		public UnityEvent afterValidation = new UnityEvent();
 
 		private void OnValidate()
 		{
@@ -127,6 +139,10 @@ namespace DaMastaCoda.Tags
 		public bool HasTag(string tag)
 		{
 			return tags.ContainsKey(new Tag(tag));
+		}
+		public string GetTagData(string tag)
+		{
+			return tagsData.TryGetValue(tag, out string value) ? value : "";
 		}
 
 		public bool HasTagAncestry(string tag)

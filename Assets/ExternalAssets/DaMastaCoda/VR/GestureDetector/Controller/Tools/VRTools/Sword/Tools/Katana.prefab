@@ -72,6 +72,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -0.0173
       objectReference: {fileID: 0}
+    - target: {fileID: 1458229394, guid: a1f79214befe662e6aeb497adfb684d8, type: 3}
+      propertyPath: bladeNormal
+      value: 
+      objectReference: {fileID: 4781462091692243642, guid: 05cdb79ef72b95ff195dbdd7a3422044, type: 3}
     - target: {fileID: 1606452397641964458, guid: a1f79214befe662e6aeb497adfb684d8, type: 3}
       propertyPath: m_Mesh
       value: 

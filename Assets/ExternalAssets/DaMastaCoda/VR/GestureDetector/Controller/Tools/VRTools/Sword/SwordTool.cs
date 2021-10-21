@@ -5,6 +5,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 	using System.Collections;
 	using System.Collections.Generic;
 	using System.Linq;
+	using UnityEngine.Events;
 
 	class CutData
 	{
@@ -20,6 +21,39 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 		[SerializeField] private GameObject tipPos;
 		[SerializeField] private GameObject basePos;
 		public float forceAppliedToCut;
+
+		public Material bladeNormal;
+		public Material bladeZaWarudo;
+
+
+		public int materialPos;
+		Renderer rnd;
+		bool existed = false;
+
+		private void Start()
+		{
+			rnd = GetComponentInChildren<Renderer>();
+
+		}
+
+		void Update()
+		{
+			OVRInput.Update();
+
+
+			if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, handInput))
+			{
+				Time.timeScale = 0.2f;
+				Time.fixedDeltaTime = Time.timeScale * 0.02f;
+				rnd.materials[materialPos] = bladeZaWarudo;
+			}
+			else
+			{
+				Time.timeScale = 1.0f;
+				Time.fixedDeltaTime = Time.timeScale * 0.02f;
+				rnd.materials[materialPos] = bladeNormal;
+			}
+		}
 
 
 		private Dictionary<GameObject, CutData> objectsBeingCut = new Dictionary<GameObject, CutData>();
@@ -63,10 +97,17 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 				objectsBeingCut.Remove(other.gameObject);
 				Destroy(other.gameObject);
+				// {
+				// 	Rigidbody rb = slices[0].GetComponent<Rigidbody>();
+				// 	Vector3 rawNormal = transformedNormal + Vector3.down * forceAppliedToCut;
+				// 	rb.AddForce(rawNormal, ForceMode.Impulse);
+				// }
+				// {
 
-				Rigidbody rb = slices[1].GetComponent<Rigidbody>();
-				Vector3 rawNormal = transformedNormal + Vector3.up * forceAppliedToCut;
-				rb.AddForce(rawNormal, ForceMode.Impulse);
+				// 	Rigidbody rb = slices[1].GetComponent<Rigidbody>();
+				// 	Vector3 rawNormal = transformedNormal + Vector3.up * forceAppliedToCut;
+				// 	rb.AddForce(rawNormal, ForceMode.Impulse);
+				// }
 			}
 		}
 
@@ -90,7 +131,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 			//Create left and right slice of hollow object
 			// SlicesMetadata slicesMeta = new SlicesMetadata(plane, mesh, true, false, false, Tags.Tags.GetComponent(objectToCut).HasTag("Physics.Cuttable.Smooth"));
-			SlicesMetadata slicesMeta = new SlicesMetadata(plane, mesh, true, false, false, false);
+			SlicesMetadata slicesMeta = new SlicesMetadata(objectToCut, plane, mesh, true, false, false, false);
 
 			GameObject positiveObject = CreateMeshGameObject(objectToCut);
 			positiveObject.name = string.Format("{0}_positive", objectToCut.name);
@@ -106,6 +147,12 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 
 			SetupCollidersAndRigidBodys(ref positiveObject, positiveSideMeshData, (objectToCut.GetComponentInParent<Rigidbody>()?.useGravity ?? false));
 			SetupCollidersAndRigidBodys(ref negativeObject, negativeSideMeshData, (objectToCut.GetComponentInParent<Rigidbody>()?.useGravity ?? false));
+
+			//copy over velocity and angularVelocity
+			positiveObject.GetComponent<Rigidbody>().velocity = objectToCut.GetComponent<Rigidbody>().velocity;
+			positiveObject.GetComponent<Rigidbody>().angularVelocity = objectToCut.GetComponent<Rigidbody>().angularVelocity;
+			negativeObject.GetComponent<Rigidbody>().velocity = objectToCut.GetComponent<Rigidbody>().velocity;
+			negativeObject.GetComponent<Rigidbody>().angularVelocity = objectToCut.GetComponent<Rigidbody>().angularVelocity;
 
 			return new GameObject[] { positiveObject, negativeObject };
 		}
@@ -181,13 +228,14 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 	{
 		private Mesh _positiveSideMesh;
 		private List<Vector3> _positiveSideVertices;
-		private List<int> _positiveSideTriangles;
+		private GameObject _original;
+		private List<List<int>> _positiveSideTriangles;
 		private List<Vector2> _positiveSideUvs;
 		private List<Vector3> _positiveSideNormals;
 
 		private Mesh _negativeSideMesh;
 		private List<Vector3> _negativeSideVertices;
-		private List<int> _negativeSideTriangles;
+		private List<List<int>> _negativeSideTriangles;
 		private List<Vector2> _negativeSideUvs;
 		private List<Vector3> _negativeSideNormals;
 
@@ -197,7 +245,9 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 		private bool _isSolid;
 		private bool _useSharedVertices = false;
 		private bool _smoothVertices = false;
+		private int _cutMaterialID;
 		private bool _createReverseTriangleWindings = false;
+		private int _submesh;
 
 		public bool IsSolid
 		{
@@ -240,11 +290,12 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 			}
 		}
 
-		public SlicesMetadata(Plane plane, Mesh mesh, bool isSolid, bool createReverseTriangleWindings, bool shareVertices, bool smoothVertices)
+		public SlicesMetadata(GameObject original, Plane plane, Mesh mesh, bool isSolid, bool createReverseTriangleWindings, bool shareVertices, bool smoothVertices)
 		{
-			_positiveSideTriangles = new List<int>();
+			_original = original;
+			_positiveSideTriangles = new List<List<int>>();
 			_positiveSideVertices = new List<Vector3>();
-			_negativeSideTriangles = new List<int>();
+			_negativeSideTriangles = new List<List<int>>();
 			_negativeSideVertices = new List<Vector3>();
 			_positiveSideUvs = new List<Vector2>();
 			_negativeSideUvs = new List<Vector2>();
@@ -258,7 +309,22 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 			_useSharedVertices = shareVertices;
 			_smoothVertices = smoothVertices;
 
-			ComputeNewMeshes();
+			_cutMaterialID = int.TryParse(Tags.Tags.GetComponent(_original).GetTagData("Physics.Cuttable.InnerMaterialID"), out int cutMaterialIDTemp) ? cutMaterialIDTemp : 0;
+
+			for (var i = 0; (i < Math.Max(_mesh.subMeshCount, _cutMaterialID + 1)); i++)
+			{
+
+				_negativeSideTriangles.Add(new List<int>());
+				_positiveSideTriangles.Add(new List<int>());
+			}
+			for (var i = 0; (i < _mesh.subMeshCount); i++)
+			{
+
+				_submesh = i;
+				ComputeNewMeshes(i);
+			}
+			_submesh = _cutMaterialID;
+			if (_isSolid) JoinPointsAlongPlane();
 		}
 
 		/// <summary>
@@ -276,11 +342,13 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 		{
 			if (side == MeshSide.Positive)
 			{
-				AddTrianglesNormalsAndUvs(ref _positiveSideVertices, ref _positiveSideTriangles, ref _positiveSideNormals, ref _positiveSideUvs, vertex1, normal1, uv1, vertex2, normal2, uv2, vertex3, normal3, uv3, shareVertices, addFirst);
+				var tris = _positiveSideTriangles[_submesh];
+				AddTrianglesNormalsAndUvs(ref _positiveSideVertices, tris, ref _positiveSideNormals, ref _positiveSideUvs, vertex1, normal1, uv1, vertex2, normal2, uv2, vertex3, normal3, uv3, shareVertices, addFirst);
 			}
 			else
 			{
-				AddTrianglesNormalsAndUvs(ref _negativeSideVertices, ref _negativeSideTriangles, ref _negativeSideNormals, ref _negativeSideUvs, vertex1, normal1, uv1, vertex2, normal2, uv2, vertex3, normal3, uv3, shareVertices, addFirst);
+				var tris = _negativeSideTriangles[_submesh];
+				AddTrianglesNormalsAndUvs(ref _negativeSideVertices, tris, ref _negativeSideNormals, ref _negativeSideUvs, vertex1, normal1, uv1, vertex2, normal2, uv2, vertex3, normal3, uv3, shareVertices, addFirst);
 			}
 		}
 
@@ -304,7 +372,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 		/// <param name="vertex3Uv"></param>
 		/// <param name="normal3"></param>
 		/// <param name="shareVertices"></param>
-		private void AddTrianglesNormalsAndUvs(ref List<Vector3> vertices, ref List<int> triangles, ref List<Vector3> normals, ref List<Vector2> uvs, Vector3 vertex1, Vector3? normal1, Vector2 uv1, Vector3 vertex2, Vector3? normal2, Vector2 uv2, Vector3 vertex3, Vector3? normal3, Vector2 uv3, bool shareVertices, bool addFirst)
+		private void AddTrianglesNormalsAndUvs(ref List<Vector3> vertices, List<int> triangles, ref List<Vector3> normals, ref List<Vector2> uvs, Vector3 vertex1, Vector3? normal1, Vector2 uv1, Vector3 vertex2, Vector3? normal2, Vector2 uv2, Vector3 vertex3, Vector3? normal3, Vector2 uv3, bool shareVertices, bool addFirst)
 		{
 			int tri1Index = vertices.IndexOf(vertex1);
 
@@ -416,20 +484,21 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 		/// </summary>
 		private void AddReverseTriangleWinding()
 		{
+
 			int positiveVertsStartIndex = _positiveSideVertices.Count;
 			//Duplicate the original vertices
 			_positiveSideVertices.AddRange(_positiveSideVertices);
 			_positiveSideUvs.AddRange(_positiveSideUvs);
 			_positiveSideNormals.AddRange(FlipNormals(_positiveSideNormals));
 
-			int numPositiveTriangles = _positiveSideTriangles.Count;
+			int numPositiveTriangles = _positiveSideTriangles[_submesh].Count;
 
 			//Add reverse windings
 			for (int i = 0; i < numPositiveTriangles; i += 3)
 			{
-				_positiveSideTriangles.Add(positiveVertsStartIndex + _positiveSideTriangles[i]);
-				_positiveSideTriangles.Add(positiveVertsStartIndex + _positiveSideTriangles[i + 2]);
-				_positiveSideTriangles.Add(positiveVertsStartIndex + _positiveSideTriangles[i + 1]);
+				_positiveSideTriangles[_submesh].Add(positiveVertsStartIndex + _positiveSideTriangles[_submesh][i]);
+				_positiveSideTriangles[_submesh].Add(positiveVertsStartIndex + _positiveSideTriangles[_submesh][i + 2]);
+				_positiveSideTriangles[_submesh].Add(positiveVertsStartIndex + _positiveSideTriangles[_submesh][i + 1]);
 			}
 
 			int negativeVertextStartIndex = _negativeSideVertices.Count;
@@ -438,14 +507,14 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 			_negativeSideUvs.AddRange(_negativeSideUvs);
 			_negativeSideNormals.AddRange(FlipNormals(_negativeSideNormals));
 
-			int numNegativeTriangles = _negativeSideTriangles.Count;
+			int numNegativeTriangles = _negativeSideTriangles[_submesh].Count;
 
 			//Add reverse windings
 			for (int i = 0; i < numNegativeTriangles; i += 3)
 			{
-				_negativeSideTriangles.Add(negativeVertextStartIndex + _negativeSideTriangles[i]);
-				_negativeSideTriangles.Add(negativeVertextStartIndex + _negativeSideTriangles[i + 2]);
-				_negativeSideTriangles.Add(negativeVertextStartIndex + _negativeSideTriangles[i + 1]);
+				_negativeSideTriangles[_submesh].Add(negativeVertextStartIndex + _negativeSideTriangles[_submesh][i]);
+				_negativeSideTriangles[_submesh].Add(negativeVertextStartIndex + _negativeSideTriangles[_submesh][i + 2]);
+				_negativeSideTriangles[_submesh].Add(negativeVertextStartIndex + _negativeSideTriangles[_submesh][i + 1]);
 			}
 		}
 
@@ -523,26 +592,31 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 		{
 			if (side == MeshSide.Positive)
 			{
+				_positiveSideMesh.subMeshCount = Math.Max(_cutMaterialID + 1, _mesh.subMeshCount);
 				_positiveSideMesh.vertices = _positiveSideVertices.ToArray();
-				_positiveSideMesh.triangles = _positiveSideTriangles.ToArray();
 				_positiveSideMesh.normals = _positiveSideNormals.ToArray();
 				_positiveSideMesh.uv = _positiveSideUvs.ToArray();
+				for (var i = 0; i < _positiveSideMesh.subMeshCount; i++)
+					_positiveSideMesh.SetTriangles(_positiveSideTriangles[i].ToArray(), i);
 			}
 			else
 			{
+				_negativeSideMesh.subMeshCount = Math.Max(_cutMaterialID + 1, _mesh.subMeshCount);
 				_negativeSideMesh.vertices = _negativeSideVertices.ToArray();
-				_negativeSideMesh.triangles = _negativeSideTriangles.ToArray();
 				_negativeSideMesh.normals = _negativeSideNormals.ToArray();
 				_negativeSideMesh.uv = _negativeSideUvs.ToArray();
+				for (var i = 0; i < _negativeSideMesh.subMeshCount; i++)
+					_negativeSideMesh.SetTriangles(_negativeSideTriangles[i].ToArray(), i);
 			}
 		}
 
 		/// <summary>
 		/// Compute the positive and negative meshes based on the plane and mesh
 		/// </summary>
-		private void ComputeNewMeshes()
+		private void ComputeNewMeshes(int submesh)
 		{
-			int[] meshTriangles = _mesh.triangles;
+			_submesh = submesh;
+			int[] meshTriangles = _mesh.GetTriangles(submesh);
 			Vector3[] meshVerts = _mesh.vertices;
 			Vector3[] meshNormals = _mesh.normals;
 			Vector2[] meshUvs = _mesh.uv;
@@ -634,11 +708,8 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 			}
 
 			//If the object is solid, join the new points along the plane otherwise do the reverse winding
-			if (_isSolid)
-			{
-				JoinPointsAlongPlane();
-			}
-			else if (_createReverseTriangleWindings)
+
+			if (_createReverseTriangleWindings)
 			{
 				AddReverseTriangleWinding();
 			}
@@ -648,6 +719,14 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 				SmoothVertices();
 			}
 
+		}
+
+		void calculateSolid()
+		{
+			if (_isSolid)
+			{
+				JoinPointsAlongPlane();
+			}
 		}
 
 		/// <summary>
@@ -662,7 +741,7 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 		/// <returns>Point of intersection</returns>
 		private Vector3 GetRayPlaneIntersectionPointAndUv(Vector3 vertex1, Vector2 vertex1Uv, Vector3 vertex2, Vector2 vertex2Uv, out Vector2 uv)
 		{
-			float distance = GetDistanceRelativeToPlane(vertex1, vertex2, out Vector3 pointOfIntersection);
+			float distance = GetDistanceRelativeToPlane(vertex1, vertex2, out Vector3 pointOfIntersection) / (vertex1 - vertex2).magnitude;
 			uv = InterpolateUvs(vertex1Uv, vertex2Uv, distance);
 			return pointOfIntersection;
 		}
@@ -733,8 +812,10 @@ namespace DaMastaCoda.VR.GestureDetector.Controller.Tools.VRTools.SwordTool
 		//
 		private void SmoothVertices()
 		{
-			DoSmoothing(ref _positiveSideVertices, ref _positiveSideNormals, ref _positiveSideTriangles);
-			DoSmoothing(ref _negativeSideVertices, ref _negativeSideNormals, ref _negativeSideTriangles);
+			var posTris = _positiveSideTriangles[_submesh];
+			DoSmoothing(ref _positiveSideVertices, ref _positiveSideNormals, ref posTris);
+			var negTris = _negativeSideTriangles[_submesh];
+			DoSmoothing(ref _negativeSideVertices, ref _negativeSideNormals, ref negTris);
 		}
 
 		private void DoSmoothing(ref List<Vector3> vertices, ref List<Vector3> normals, ref List<int> triangles)
