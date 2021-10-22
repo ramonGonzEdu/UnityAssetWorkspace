@@ -70,7 +70,7 @@ namespace DaMastaCoda.Tags
 
 
 		static public bool g_existed = false;
-		public bool existed = false;
+		[NonSerialized] public bool existed = false;
 		private void Start()
 		{
 			if (!g_existed)
