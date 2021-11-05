@@ -13,7 +13,7 @@ namespace DaMastaCoda.SoftBody
 		private JellyVertex[] jv;
 		private Vector3[] vertexArray;
 
-		private void Start()
+		private void OnEnable()
 		{
 			originalMesh = GetComponent<MeshFilter>().sharedMesh;
 			meshClone = Instantiate(originalMesh);

@@ -37,7 +37,32 @@ namespace DaMastaCoda.VR.GestureDetector.Controller
 			}
 		}
 
+
+		private void OnDisable()
+		{
+			if (grabbed != null)
+			{
+				Destroy(fj);
+			}
+		}
+
+		private void OnEnable()
+		{
+			if (grabbed != null)
+			{
+				fj = grabbed.AddComponent<FixedJoint>();
+				fj.connectedBody = handObject.GetComponent<Rigidbody>();
+			}
+		}
+
 		GameObject grabbed;
+
+
+		public GameObject GetGrabbedObject()
+		{
+			return grabbed;
+		}
+
 		FixedJoint fj;
 		private void TryGrab()
 		{
